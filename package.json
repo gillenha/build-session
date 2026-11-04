@@ -1,26 +1,20 @@
 {
+  "name": "build-session",
+  "private": true,
+  "scripts": {
+    "setup": "uv venv backend\\.venv --python 3.12 && uv pip install --python backend\\.venv\\Scripts\\python.exe -r backend\\requirements.txt && npm install --prefix frontend",
+    "start": "concurrently -k -n api,web -c blue,green \"npm:start:api\" \"npm:start:web\"",
+    "start:api": "backend\\.venv\\Scripts\\python.exe -m uvicorn app.main:app --app-dir backend --port 8000 --reload --reload-dir backend/app",
+    "start:web": "npm run dev --prefix frontend -- --strictPort",
+    "ingest": "cd backend && .venv\\Scripts\\python.exe -m app.ingest",
+    "trace": "backend\\.venv\\Scripts\\python.exe backend\\scripts\\trace_chat.py",
+    "eval:qc": "backend\\.venv\\Scripts\\python.exe evals\\run_qc_evals.py"
+  },
   "dependencies": {
     "@neon/config": "^1.10.1",
     "@neon/env": "^1.6.9"
   },
-  "name": "build-session",
-  "version": "1.0.0",
-  "description": "b\u0000u\u0000i\u0000l\u0000d\u0000-\u0000s\u0000e\u0000s\u0000s\u0000i\u0000o\u0000n\u0000 \u0000",
-  "main": "index.js",
-  "devDependencies": {},
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/gillenha/build-session.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
-  "bugs": {
-    "url": "https://github.com/gillenha/build-session/issues"
-  },
-  "homepage": "https://github.com/gillenha/build-session#readme"
+  "devDependencies": {
+    "concurrently": "^10.0.6"
+  }
 }

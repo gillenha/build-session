@@ -81,9 +81,14 @@ Work is split into tracks that never edit the same file. Stay inside the track y
 
 ## Running
 
-- Backend: `$env:PYTHONPATH='backend'; backend\.venv\Scripts\python.exe -m uvicorn app.main:app --app-dir backend --port 8000` (API docs at `/docs`)
-- Ingest a ticker: `$env:PYTHONPATH='backend'; backend\.venv\Scripts\python.exe -m app.ingest AAPL`
-- Set up the venv: `uv venv backend\.venv --python 3.12; uv pip install --python backend\.venv\Scripts\python.exe -r backend\requirements.txt`
+All commands run from the repo root (Windows paths; scripts live in the root `package.json`).
+
+- `npm install` then `npm run setup` — once: root deps, Python venv in `backend\.venv` (needs `uv`), front-end deps. `.env.local` must hold the env vars below.
+- `npm start` — backend (http://localhost:8000, API docs at `/docs`, auto-reloads on `backend/app` changes) and front end (http://localhost:5173) together; Ctrl+C stops both.
+- `npm run start:api` / `npm run start:web` — either one alone.
+- `npm run ingest -- AAPL` — ingest a ticker's latest 10-K and 10-Q.
+- `npm run trace -- "What is Microsoft trading at now?"` — print every stage of one /chat request (add `--inject-bad-number` to force a QC failure).
+- `npm run eval:qc` — QC agent eval cases (calls the real LLM reviewer).
 
 ## Working rules
 
