@@ -8,10 +8,12 @@ An agent for financial advisors preparing for client conversations: it answers q
 
 ## API contract
 
-- `POST /chat` — body `{session_id, message}` → `{answer, citations[], quote_as_of, verified}`
+- `POST /chat` — body `{session_id, message}` → `{answer, citations[], quote_as_of, verified, issues[], attempts}`
   - `citations[]`: the filing chunks the answer cites (ticker, filing type, filing date, page, source URL, snippet)
   - `quote_as_of`: timestamp of the quote used, or `null`
-  - `verified`: result of the deterministic number check (below)
+  - `verified`: `true` only if the quality-check agent passed the final answer (below)
+  - `issues[]`: the QC reasons when `verified` is `false` (each prefixed `check:` or `review:`); empty on pass
+  - `attempts`: `1`, or `2` when the first draft failed QC and was retried
 - `POST /ingest` — body `{ticker}`; pulls the most recent 10-K and 10-Q from SEC EDGAR, chunks, embeds, stores
 - `GET /health`
 
@@ -39,9 +41,18 @@ Tools are called by the model through Anthropic tool use. App code never calls t
 - Every answer ends with a "not financial advice" disclaimer.
 - EDGAR requests send `User-Agent: build-session gillen08@gmail.com` (SEC requirement).
 
-## Verification
+## Verification (quality-check agent, `backend/app/qc/`)
 
-Deterministic Python checks that every number in the answer appears in a cited chunk or in a `get_quote` result; the result sets `verified`. The LLM never validates its own math. Labels the code appends itself (sample-data notice, quote timestamp, disclaimer) are added after the check.
+Runs after the answering agent drafts a reply and before it is returned. Input: user question, draft, raw tool results.
+
+1. Deterministic checks (`qc/checks.py`) — the hard gate:
+   - every number in the draft appears in a cited chunk or a `get_quote` result (`verify.py`);
+   - a quote 15+ minutes old must be labelled "not current" in the final text;
+   - a `sample_data` quote must be labelled "sample data" in the final text.
+2. Only if those pass: LLM claim review (`qc/review.py`) — fresh context, no tools, structured `{verdict, issues}`. It can add failures but never overrides a deterministic failure. The LLM never validates its own math.
+
+Code (not the model) appends the quote timestamp, "NOT CURRENT", "SAMPLE DATA" and disclaimer labels; the checks verify they are present.
+On fail: one retry with the issues passed back to the answering agent. A second fail returns `verified: false` with `issues`, shown in the UI.
 
 ## Memory
 
@@ -62,10 +73,10 @@ Variables: `ANTHROPIC_API_KEY`, `MODEL`, `OPENAI_API_KEY`, `QUOTE_API_KEY` (unus
 
 Work is split into tracks that never edit the same file. Stay inside the track you are working on.
 
-- **Backend:** `backend/app/{agent,prompts,verify,guardrails,memory}.py`, `backend/app/tools/`, `backend/app/routes/chat.py`, `backend/app/schema/chat.sql`, `backend/tests/`
+- **Backend:** `backend/app/{agent,prompts,verify,guardrails,memory}.py`, `backend/app/tools/`, `backend/app/qc/`, `backend/app/routes/chat.py`, `backend/app/schema/chat.sql`, `backend/tests/`
 - **Ingestion:** `backend/app/{edgar,ingest,embeddings}.py`, `backend/app/routes/ingest.py`, `backend/app/schema/filings.sql`
 - **Front end:** `frontend/` (talks to the backend only over HTTP)
-- **Evals:** `evals/` (talks to the backend only over HTTP)
+- **Evals:** `evals/` (talks to the backend over HTTP; component evals may import `app.qc` read-only)
 - **Frozen, change only with user sign-off:** `backend/app/{config,db,main}.py`, `backend/app/routes/health.py`, `backend/requirements.txt`, and the API contract above.
 
 ## Running

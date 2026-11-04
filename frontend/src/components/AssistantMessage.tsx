@@ -2,6 +2,7 @@ import Markdown from "react-markdown";
 
 import type { ChatResponse } from "../api";
 import { Citations } from "./Citations";
+import { QcIssues } from "./QcIssues";
 
 // The backend appends quote labels and the disclaimer after a "---" line; show them as a muted footer.
 const FOOTER_SEPARATOR = "\n\n---\n";
@@ -49,6 +50,7 @@ export function AssistantMessage({ response }: { response: ChatResponse }) {
         <Markdown>{body}</Markdown>
       </div>
       {footer && <p className="mt-3 whitespace-pre-line text-xs text-slate-500">{footer}</p>}
+      <QcIssues response={response} />
       <Citations citations={response.citations} />
     </div>
   );

@@ -27,6 +27,8 @@ class ChatResponse(BaseModel):
     citations: list[Citation]
     quote_as_of: str | None
     verified: bool
+    issues: list[str]  # QC reasons when verified is false; empty on pass
+    attempts: int  # 1, or 2 if the first draft failed QC and was retried
 
 
 @router.post("/chat", response_model=ChatResponse)

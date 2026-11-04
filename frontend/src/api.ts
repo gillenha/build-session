@@ -14,6 +14,8 @@ export type ChatResponse = {
   citations: Citation[];
   quote_as_of: string | null;
   verified: boolean;
+  issues: string[];
+  attempts: number;
 };
 
 export async function postChat(sessionId: string, message: string): Promise<ChatResponse> {

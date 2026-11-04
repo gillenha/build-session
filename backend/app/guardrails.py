@@ -1,5 +1,8 @@
 """Input PII redaction and the labels code appends to every answer."""
 import re
+from datetime import datetime
+
+from app.qc.checks import MAX_QUOTE_AGE_MINUTES, is_stale
 
 # Order matters: more specific patterns first so a card number isn't half-eaten by the account pattern.
 _PII_PATTERNS = [
@@ -19,10 +22,12 @@ def redact_pii(text: str) -> str:
     return text
 
 
-def footer(quotes: list[dict]) -> str:
+def footer(quotes: list[dict], now: datetime) -> str:
     lines = []
     for q in quotes:
         label = f"{q['ticker']} quote as of {q['timestamp']}"
+        if is_stale(q, now):
+            label += f" — NOT CURRENT (older than {MAX_QUOTE_AGE_MINUTES} minutes)"
         if q.get("source") == "sample_data":
             label += " — SAMPLE DATA, not live market prices"
         lines.append(label + ".")
