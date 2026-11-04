@@ -21,9 +21,11 @@ def pool() -> ConnectionPool:
 
 
 def init_schema() -> None:
-    sql = (Path(__file__).parent / "schema.sql").read_text()
+    """Run every schema/*.sql file (each track owns its own file; all are idempotent)."""
     with pool().connection() as conn:
-        conn.execute(sql)
+        conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
+        for path in sorted((Path(__file__).parent / "schema").glob("*.sql")):
+            conn.execute(path.read_text())
 
 
 def close() -> None:

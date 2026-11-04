@@ -58,6 +58,22 @@ Variables: `ANTHROPIC_API_KEY`, `MODEL`, `OPENAI_API_KEY`, `QUOTE_API_KEY` (unus
 - `neon.ts` is the declarative Neon config; `.neon` (gitignored) links the repo to project `square-glitter-34016223`, branch `production`.
 - `neon deploy` applies `neon.ts` and pulls env vars into `.env.local`; `neon env pull` refreshes them only; `neon config plan` previews; `neon checkout <name> --create` makes a dev branch.
 
+## Tracks and file ownership
+
+Work is split into tracks that never edit the same file. Stay inside the track you are working on.
+
+- **Backend:** `backend/app/{agent,prompts,verify,guardrails,memory}.py`, `backend/app/tools/`, `backend/app/routes/chat.py`, `backend/app/schema/chat.sql`, `backend/tests/`
+- **Ingestion:** `backend/app/{edgar,ingest,embeddings}.py`, `backend/app/routes/ingest.py`, `backend/app/schema/filings.sql`
+- **Front end:** `frontend/` (talks to the backend only over HTTP)
+- **Evals:** `evals/` (talks to the backend only over HTTP)
+- **Frozen, change only with user sign-off:** `backend/app/{config,db,main}.py`, `backend/app/routes/health.py`, `backend/requirements.txt`, and the API contract above.
+
+## Running
+
+- Backend: `$env:PYTHONPATH='backend'; backend\.venv\Scripts\python.exe -m uvicorn app.main:app --app-dir backend --port 8000` (API docs at `/docs`)
+- Ingest a ticker: `$env:PYTHONPATH='backend'; backend\.venv\Scripts\python.exe -m app.ingest AAPL`
+- Set up the venv: `uv venv backend\.venv --python 3.12; uv pip install --python backend\.venv\Scripts\python.exe -r backend\requirements.txt`
+
 ## Working rules
 
 - After each change, explain it in plain language.
