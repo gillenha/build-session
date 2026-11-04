@@ -18,8 +18,12 @@ export type ChatResponse = {
   attempts: number;
 };
 
+// Backend base URL, baked in at build time (e.g. https://api.example.up.railway.app).
+// Unset in local dev, where "/api" goes through the Vite proxy in vite.config.ts.
+const API_BASE = (import.meta.env.VITE_API_BASE_URL || "/api").replace(/\/+$/, "");
+
 export async function postChat(sessionId: string, message: string): Promise<ChatResponse> {
-  const res = await fetch("/api/chat", {
+  const res = await fetch(`${API_BASE}/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ session_id: sessionId, message }),

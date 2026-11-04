@@ -1,0 +1,14 @@
+# Railway config for the backend service. In the Railway service settings, set Root Directory to /backend and
+# point the config-as-code path at /backend/railway.toml (the config path does not follow the root directory).
+
+[build]
+builder = "RAILPACK"
+# When the Presidio guard lands (Step 3), download its spaCy model at build time instead of on first request:
+# buildCommand = "pip install -r requirements.txt && python -m spacy download en_core_web_lg"
+
+[deploy]
+# 0.0.0.0 so Railway's proxy can reach the container; $PORT is assigned by Railway.
+startCommand = "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+healthcheckPath = "/health"
+healthcheckTimeout = 60
+restartPolicyType = "ON_FAILURE"

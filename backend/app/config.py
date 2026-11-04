@@ -24,3 +24,8 @@ def model() -> str:
 
 def database_url() -> str:
     return require("DATABASE_URL")
+
+
+def cors_origins() -> list[str]:
+    """Comma-separated CORS_ALLOWED_ORIGINS, e.g. "https://web.up.railway.app". Empty = no cross-origin access."""
+    return [o.strip().rstrip("/") for o in os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",") if o.strip()]

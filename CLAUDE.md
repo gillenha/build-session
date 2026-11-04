@@ -62,7 +62,16 @@ Conversation history lives in a Postgres table keyed by `session_id`.
 
 `.env.local` (gitignored; Neon writes the database vars) holds the real values. `.env.example` lists names only and is the only tracked env file — never put values in it, never commit `.env*`.
 
-Variables: `ANTHROPIC_API_KEY`, `MODEL`, `OPENAI_API_KEY`, `QUOTE_API_KEY` (unused until a live quote provider exists), `DATABASE_URL` (pooled), plus Neon's `DATABASE_URL_UNPOOLED` and `NEON_BRANCH`.
+Backend variables (template: `backend/.env.example`): `DATABASE_URL` (pooled; required at startup), `ANTHROPIC_API_KEY`, `MODEL`, `OPENAI_API_KEY`, `CORS_ALLOWED_ORIGINS` (comma-separated front-end origins; unset = no cross-origin access), `QUOTE_API_KEY` (unused until a live quote provider exists). Neon also writes `DATABASE_URL_UNPOOLED` and `NEON_BRANCH`, which nothing reads.
+
+Front-end variable (template: `frontend/.env.example`): `VITE_API_BASE_URL` — backend URL, baked in at build time. Unset in local dev, where `/api` goes through the Vite proxy.
+
+## Deploying (Railway)
+
+- Backend service: Root Directory `/backend`, config `/backend/railway.toml` (starts `uvicorn app.main:app --host 0.0.0.0 --port $PORT`, health check `/health`). Python version from `backend/.python-version`. Set the backend variables above in the service.
+- Front end: build with `VITE_API_BASE_URL` set to the backend's public URL, and add the front end's URL to the backend's `CORS_ALLOWED_ORIGINS`.
+- Session memory is in Postgres (`chat_messages`), so restarts and multiple instances keep conversations.
+- `npm start` and the other root scripts are for local Windows dev only.
 
 ## Neon
 
